@@ -8,7 +8,7 @@
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
     <div class="col">
-        <a asp-action="Create" class="card h-100 shadow-sm border-0 d-flex align-items-center justify-content-center text-decoration-none add-card">
+        <a asp-action="Add" class="card h-100 shadow-sm border-0 d-flex align-items-center justify-content-center text-decoration-none add-card">
             <div class="text-center">
                 <i class="bi bi-plus-circle" style="font-size: 3rem; color: #6c757d;"></i>
                 <p class="mt-2 text-muted">Add Book</p>
@@ -23,14 +23,18 @@
 
                 <div class="book-actions">
                     <a href="javascript:void(0);"
-                                   class="action-btn"
-                                   title="Edit"
-                                   onclick="openEditModal('@book.BookId')">
+                       class="action-btn"
+                       title="Edit"
+                       onclick="openEditModal('@book.BookId')">
                         <i class="bi bi-pencil"></i>
                     </a>
-                    <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details"/>
 
-                    <a asp-action="Delete" asp-route-id="@book.BookId" class="action-btn" title="Delete">
+                    <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details"></a>
+
+                    <a href="javascript:void(0);"
+                       class="action-btn"
+                       title="Delete"
+                       onclick="openDeleteModal('/Book/DeleteModal?id=@book.BookId', 'Delete Book')">
                         <i class="bi bi-trash"></i>
                     </a>
                 </div>
@@ -71,7 +75,7 @@
 
 @section Scripts {
     <script>
-            function openEditModal(bookId) {
+        function openEditModal(bookId) {
             fetch(`/Book/EditModal?id=${encodeURIComponent(bookId)}`)
                 .then(response => {
                     if (!response.ok) {
@@ -99,13 +103,17 @@
                 success: function (data) {
                     $('#exampleModal .modal-content').html(data);
                     $('#exampleModalLabel').text(title);
-                    $('#exampleModal').modal('show');
+
+                    
+                    var modal = new bootstrap.Modal(document.getElementById('exampleModal'));
+                    modal.show();
                 },
                 error: function () {
                     alert('Error loading details.');
                 }
             });
         }
+
 
         document.addEventListener("submit", function (e) {
             const form = e.target;
@@ -116,15 +124,15 @@
                     method: form.method,
                     body: new URLSearchParams(formData)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    location.reload();
-                })
-                .catch(error => {
-                    alert('Error saving changes: ' + error.message);
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        location.reload();
+                    })
+                    .catch(error => {
+                        alert('Error saving changes: ' + error.message);
+                    });
             }
         });
     </script>

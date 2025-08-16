@@ -13,10 +13,28 @@ namespace Library_Management.Controllers
 
         public IActionResult Add()
         {
-            return View();
+            // This shows the Add.cshtml form
+            return View(new AddBookViewModel());
         }
 
-     
+        // POST: Book/Add
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Add(AddBookViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Re-render the form with validation errors
+                return View(vm);
+            }
+
+            BookService.Instance.AddBook(vm);
+
+            // After saving, go back to book list
+            return RedirectToAction("Index");
+        }
+
+
         public IActionResult EditModal(Guid id)
         {
             var editBookViewModel = BookService.Instance.GetBookById(id);
@@ -43,17 +61,22 @@ namespace Library_Management.Controllers
 
         public IActionResult DeleteModal(Guid id)
         {
-            
-            return PartialView("_DeletePartial");
+            var book = BookService.Instance.GetBookById(id);
+            if (book == null) return NotFound();
+
+            return PartialView("_DeleteBookPartial", book);
         }
 
-        [HttpDelete]
-        public IActionResult Delete(Guid id)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(Guid BookId)
         {
-            // Assuming BookService has a method to delete the book
-            BookService.Instance.DeleteBook(id);
-            return Ok();
+            BookService.Instance.DeleteBook(BookId);
+            return RedirectToAction("Index");
         }
+
+
 
         public IActionResult Details(Guid id)
         {
