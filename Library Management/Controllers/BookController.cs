@@ -13,7 +13,7 @@ namespace Library_Management.Controllers
 
         public IActionResult AddModal()
         {
-            return PartialView("_AddBookPartial");
+            return PartialView("Add");
         }
 
         [HttpPost]
