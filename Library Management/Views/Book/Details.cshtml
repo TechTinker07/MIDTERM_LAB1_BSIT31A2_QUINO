@@ -52,11 +52,15 @@
 </div>
 
 <div class="modal-footer">
-
-    <a asp-action="Index" asp-route-id="@Model.BookId" class="btn btn-outline-primary">
+    <a asp-action="Index" class="btn btn-outline-primary">
         <i class="bi bi-arrow-left"></i> Close
     </a>
-    <a asp-action="Edit" asp-route-id="@Model.BookId" class="btn btn-primary">
-        <i class="bi bi-pencil-square"></i> Manage Copies
-    </a>
+
+    <!-- Add Copies Form -->
+    <form asp-action="AddCopy" asp-controller="Book" method="post">
+        <input type="hidden" name="id" value="@Model.BookId" />
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Copy
+        </button>
+    </form>
 </div>

@@ -219,6 +219,7 @@ public class BookService
     public void AddBook(AddBookViewModel book)
     {
         ArgumentNullException.ThrowIfNull(book, nameof(book));
+
         var newBook = new Book
         {
             Id = Guid.NewGuid(),
@@ -234,8 +235,13 @@ public class BookService
         {
             Id = Guid.NewGuid(),
             Name = book.Author,
-            ProfileImageUrl = book.AuthorProfileImageUrl
+            ProfileImageUrl = book.AuthorProfileImageUrl,
+            Books = new List<Book>()  // Initialize the Books list!
         };
+
+        // Link the new book to the new author
+        newAuthor.Books.Add(newBook);
+
         _authors.Add(newAuthor);
 
         var newBookItem = new BookCopy
@@ -250,6 +256,8 @@ public class BookService
         _bookCopies.Add(newBookItem);
     }
 
+
+
     public IEnumerable<BookListViewModel> GetBooks()
     {
         return _books.Select(b => new BookListViewModel
@@ -259,7 +267,7 @@ public class BookService
             ISBN = b.ISBN,
             Description = b.Description,
             Genre = b.Genre,
-            
+
             PublishedDate = b.PublishedDate,
             CoverImageUrl = _bookCopies.FirstOrDefault(bi => bi.Book.Id == b.Id)?.CoverImageUrl,
             AuthorName = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == b.Id))?.Name,
@@ -293,31 +301,56 @@ public class BookService
     {
         ArgumentNullException.ThrowIfNull(vm, nameof(vm));
 
+        // Find the book by ID
         var book = _books.FirstOrDefault(b => b.Id == vm.BookId) ?? throw new KeyNotFoundException("Book not found");
+
+        // Update basic book properties
         book.Title = vm.Title;
         book.ISBN = vm.ISBN;
         book.Description = vm.Description;
         book.Genre = vm.Genre;
         book.PublishedDate = vm.PublishedDate;
-        
 
-        var author = _authors.FirstOrDefault(a => a.Id == vm.AuthorId);
+        // Find the old author (if any) so we can remove the book if author changes
+        var oldAuthor = _authors.FirstOrDefault(a => a.Books.Any(bk => bk.Id == book.Id));
+
+        // Find or create the new author
+        Author author = null;
+        if (vm.AuthorId.HasValue)
+        {
+            author = _authors.FirstOrDefault(a => a.Id == vm.AuthorId.Value);
+        }
         if (author == null)
         {
             author = new Author
             {
-                Id = Guid.NewGuid(),
+                Id = vm.AuthorId ?? Guid.NewGuid(),
                 Name = vm.Author,
-                ProfileImageUrl = vm.AuthorProfileImageUrl
+                ProfileImageUrl = vm.AuthorProfileImageUrl,
+                Books = new List<Book>()
             };
             _authors.Add(author);
         }
         else
         {
+            // Update existing author info
             author.Name = vm.Author;
             author.ProfileImageUrl = vm.AuthorProfileImageUrl;
         }
 
+        // If author changed, remove the book from old author
+        if (oldAuthor != null && oldAuthor.Id != author.Id)
+        {
+            oldAuthor.Books.Remove(book);
+        }
+
+        // Ensure the book is linked to the new author
+        if (!author.Books.Any(bk => bk.Id == book.Id))
+        {
+            author.Books.Add(book);
+        }
+
+        // Update or create the BookCopy (cover image)
         var bookCopy = _bookCopies.FirstOrDefault(bi => bi.Book.Id == vm.BookId);
         if (bookCopy != null)
         {
@@ -335,6 +368,7 @@ public class BookService
             _bookCopies.Add(bookCopy);
         }
     }
+
 
     public void DeleteBook(Guid id)
     {
@@ -369,4 +403,27 @@ public class BookService
             return _instance;
         }
     }
+
+    public void AddCopy(Guid bookId)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == bookId);
+        if (book == null)
+            throw new KeyNotFoundException("Book not found.");
+
+        var coverImage = _bookCopies.FirstOrDefault(bc => bc.Book.Id == bookId)?.CoverImageUrl;
+
+        var newCopy = new BookCopy
+        {
+            Id = Guid.NewGuid(),
+            Book = book,
+            AddedDate = DateTime.Now,
+            Condition = "New",
+            Source = "Manual Add",
+            CoverImageUrl = coverImage
+        };
+
+        _bookCopies.Add(newCopy);
+    }
+
+
 }

@@ -8,7 +8,7 @@
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
     <div class="col">
-        <a asp-action="Add" class="card h-100 shadow-sm border-0 d-flex align-items-center justify-content-center text-decoration-none add-card">
+        <a href="javascript:void(0);" class="card h-100 shadow-sm border-0 d-flex align-items-center justify-content-center text-decoration-none add-card" onclick="openAddModal()">
             <div class="text-center">
                 <i class="bi bi-plus-circle" style="font-size: 3rem; color: #6c757d;"></i>
                 <p class="mt-2 text-muted">Add Book</p>
@@ -20,7 +20,6 @@
     {
         <div class="col">
             <div class="card book-card h-100 shadow-sm border-0">
-
                 <div class="book-actions">
                     <a href="javascript:void(0);"
                        class="action-btn"
@@ -29,12 +28,14 @@
                         <i class="bi bi-pencil"></i>
                     </a>
 
-                    <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details"></a>
+                    <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details">
+                        <i class="bi bi-eye"></i>
+                    </a>
 
                     <a href="javascript:void(0);"
                        class="action-btn"
                        title="Delete"
-                       onclick="openDeleteModal('/Book/DeleteModal?id=@book.BookId', 'Delete Book')">
+                       onclick="openDeleteModal('@book.BookId')">
                         <i class="bi bi-trash"></i>
                     </a>
                 </div>
@@ -55,69 +56,59 @@
     }
 </div>
 
+<!-- Shared Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                ...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
+            <!-- Partial content will be loaded dynamically -->
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <script>
-        function openEditModal(bookId) {
-            fetch(`/Book/EditModal?id=${encodeURIComponent(bookId)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error loading edit form.');
-                    }
-                    return response.text();
-                })
+        function openAddModal() {
+            fetch(`/Book/AddModal`)
+                .then(response => response.text())
                 .then(html => {
                     document.querySelector('#exampleModal .modal-content').innerHTML = html;
-
-                    // Show the Bootstrap modal (v5 API)
-                    let modal = new bootstrap.Modal(document.getElementById('exampleModal'));
-                    modal.show();
+                    new bootstrap.Modal(document.getElementById('exampleModal')).show();
                 })
                 .catch(error => {
-                    alert(error.message);
-                    console.error(error);
+                    alert('Error loading Add modal: ' + error.message);
                 });
         }
 
-        function openDeleteModal(url, title) {
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function (data) {
-                    $('#exampleModal .modal-content').html(data);
-                    $('#exampleModalLabel').text(title);
-
-                    
-                    var modal = new bootstrap.Modal(document.getElementById('exampleModal'));
-                    modal.show();
-                },
-                error: function () {
-                    alert('Error loading details.');
-                }
-            });
+        function openEditModal(bookId) {
+            fetch(`/Book/EditModal?id=${encodeURIComponent(bookId)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.querySelector('#exampleModal .modal-content').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('exampleModal')).show();
+                })
+                .catch(error => {
+                    alert('Error loading Edit modal: ' + error.message);
+                });
         }
 
+        function openDeleteModal(bookId) {
+            fetch(`/Book/DeleteModal?id=${encodeURIComponent(bookId)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.querySelector('#exampleModal .modal-content').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('exampleModal')).show();
+                })
+                .catch(error => {
+                    alert('Error loading Delete modal: ' + error.message);
+                });
+        }
 
         document.addEventListener("submit", function (e) {
             const form = e.target;
-            if (form.matches("#editBookForm")) {
+
+            if (form.matches("#editBookForm") || form.matches("#addBookForm") || form.matches("#deleteBookForm")) {
                 e.preventDefault();
                 const formData = new FormData(form);
                 fetch(form.action, {
@@ -126,12 +117,12 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                            throw new Error('Failed to submit form.');
                         }
-                        location.reload();
+                        location.reload(); // Refresh to reflect changes
                     })
                     .catch(error => {
-                        alert('Error saving changes: ' + error.message);
+                        alert('Error: ' + error.message);
                     });
             }
         });
