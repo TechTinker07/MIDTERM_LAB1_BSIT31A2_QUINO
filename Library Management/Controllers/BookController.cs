@@ -21,11 +21,11 @@ namespace Library_Management.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return View(vm); // balik sa Add view if may error
             }
 
             BookService.Instance.AddBook(vm);
-            return Ok();
+            return RedirectToAction("Index"); //balik sa list para makita yung bagong book
         }
 
         public IActionResult EditModal(Guid id)

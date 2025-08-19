@@ -28,9 +28,13 @@
                         <i class="bi bi-pencil"></i>
                     </a>
 
-                    <a asp-action="Details" asp-route-id="@book.BookId" class="action-btn" title="Details">
+                    <a href="javascript:void(0);"
+                       class="action-btn"
+                       title="Details"
+                       onclick="openDetailsModal('@book.BookId')">
                         <i class="bi bi-eye"></i>
                     </a>
+
 
                     <a href="javascript:void(0);"
                        class="action-btn"
@@ -104,6 +108,19 @@
                     alert('Error loading Delete modal: ' + error.message);
                 });
         }
+
+                function openDetailsModal(bookId) {
+            fetch(`/Book/Details?id=${encodeURIComponent(bookId)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.querySelector('#exampleModal .modal-content').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('exampleModal')).show();
+                })
+                .catch(error => {
+                    alert('Error loading Details modal: ' + error.message);
+                });
+        }
+
 
         document.addEventListener("submit", function (e) {
             const form = e.target;

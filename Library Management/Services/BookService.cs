@@ -350,7 +350,7 @@ public class BookService
             author.Books.Add(book);
         }
 
-        // Update or create the BookCopy (cover image)
+        // Update / create the BookCopy (cover image)
         var bookCopy = _bookCopies.FirstOrDefault(bi => bi.Book.Id == vm.BookId);
         if (bookCopy != null)
         {
